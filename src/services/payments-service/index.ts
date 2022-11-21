@@ -6,9 +6,21 @@ import { exclude } from "@/utils/prisma-utils";
 async function returnPayment(userId: number, ticketId: number) {
   const ticket = await paymentRepository.findTicketById(ticketId);
 
-  if (!ticket) throw notFoundError();
+  if(!ticket) throw notFoundError(); 
 
-  if (ticket.Ticket.Enrollment.userId != userId) throw unauthorizedError();
+  const user = await paymentRepository.findUserById(userId);
+
+  /*
+    const ticketsId: number[] = [];
+
+    user.Enrollment.map((enrollment) => {
+      enrollment.Ticket.map((ticket) => {
+        ticketsId.push(ticket.id);
+      });
+    });
+  */
+
+  if(ticket.Ticket.Enrollment.id !== user.Enrollment[0].id) throw unauthorizedError();
 
   return exclude(ticket, "Ticket");
 }
@@ -18,7 +30,7 @@ async function returnCreatedPayment(userId: number, paymentProcessBody: PaymentP
 
   if(!ticket) throw notFoundError();
 
-  if (ticket.Enrollment.User.id !== userId) throw unauthorizedError();
+  if(ticket.Enrollment.User.id !== userId) throw unauthorizedError();
 
   await paymentRepository.updateTicketStatusById(paymentProcessBody.ticketId);
 
