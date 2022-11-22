@@ -1,28 +1,22 @@
 import { PaymentProcessBody, DataCreatedPayment } from "@/protocols";
 import { notFoundError, unauthorizedError } from "@/errors";
 import paymentRepository from "@/repositories/payment-repository";
+import ticketRepository from "@/repositories/ticket-repository";
+import enrollmentRepository from "@/repositories/enrollment-repository";
 import { exclude } from "@/utils/prisma-utils";
 
 async function returnPayment(userId: number, ticketId: number) {
-  const ticket = await paymentRepository.findTicketById(ticketId);
+  const ticket = await ticketRepository.findTickeyById(ticketId);
 
   if(!ticket) throw notFoundError(); 
 
-  const user = await paymentRepository.findUserById(userId);
+  const enrollment = await enrollmentRepository.findEnrollmentById(ticket.enrollmentId);
 
-  /*
-    const ticketsId: number[] = [];
+  if(enrollment.userId !== userId) throw unauthorizedError();
 
-    user.Enrollment.map((enrollment) => {
-      enrollment.Ticket.map((ticket) => {
-        ticketsId.push(ticket.id);
-      });
-    });
-  */
+  const payment = await paymentRepository.findTicketById(ticketId);
 
-  if(ticket.Ticket.Enrollment.id !== user.Enrollment[0].id) throw unauthorizedError();
-
-  return exclude(ticket, "Ticket");
+  return exclude(payment, "Ticket");
 }
 
 async function returnCreatedPayment(userId: number, paymentProcessBody: PaymentProcessBody) {
